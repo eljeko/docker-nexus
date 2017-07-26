@@ -20,6 +20,7 @@ LABEL vendor=Sonatype \
 
 ARG NEXUS_VERSION=2.14.4-03
 ARG NEXUS_DOWNLOAD_URL=https://download.sonatype.com/nexus/oss/nexus-${NEXUS_VERSION}-bundle.tar.gz
+ARG NEXUS_XML_URL=http://raw.githubusercontent.com/eljeko/docker-nexus/master/oss/ext/nexus.xml
 
 ENV SONATYPE_WORK=/sonatype-work \
     JAVA_HOME=/opt/java \
@@ -51,7 +52,14 @@ RUN mkdir -p /opt/sonatype/nexus \
   && mv /tmp/nexus-${NEXUS_VERSION}/* /opt/sonatype/nexus/ \
   && rm -rf /tmp/nexus-${NEXUS_VERSION}
 
+RUN mkdir -p /sonatype-work/conf/ 
+RUN curl --fail --silent --location --retry 3 \
+    ${NEXUS_XML_URL} \
+    > /sonatype-work/conf/nexus.xml
+
 RUN useradd -r -u 200 -m -c "nexus role account" -d ${SONATYPE_WORK} -s /bin/false nexus
+
+RUN chown -R 200 sonatype-work/
 
 VOLUME ${SONATYPE_WORK}
 
